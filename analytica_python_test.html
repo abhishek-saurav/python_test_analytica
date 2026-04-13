@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytica | Python Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --card: #161a22;
+    --border: #1e2330;
+    --accent: #00e5a0;
+    --accent2: #0090ff;
+    --warn: #ff6b35;
+    --danger: #ff3b5c;
+    --success: #00e5a0;
+    --text: #e8eaf0;
+    --muted: #5a6070;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container { max-width: 860px; margin: 0 auto; padding: 40px 20px; position: relative; z-index: 1; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 48px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .logo { font-family: var(--sans); font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); }
+  .logo span { color: var(--accent); }
+  .badge { font-family: var(--mono); font-size: 11px; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; letter-spacing: 2px; text-transform: uppercase; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* DIRECTIONS */
+  .directions-wrap { background: var(--card); border: 1px solid var(--border); padding: 48px; position: relative; overflow: hidden; }
+  .directions-wrap::before { content: 'PY'; position: absolute; right: -20px; top: -30px; font-size: 180px; font-weight: 800; color: rgba(0,229,160,0.04); font-family: var(--mono); pointer-events: none; user-select: none; }
+  .dir-title { font-size: 32px; font-weight: 800; margin-bottom: 6px; line-height: 1.1; }
+  .dir-sub { font-family: var(--mono); font-size: 13px; color: var(--accent); margin-bottom: 32px; letter-spacing: 1px; }
+  .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 36px; }
+  .info-tile { background: var(--surface); border: 1px solid var(--border); padding: 18px; text-align: center; }
+  .info-tile .val { font-family: var(--mono); font-size: 26px; font-weight: 500; color: var(--accent); display: block; margin-bottom: 4px; }
+  .info-tile .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+  .dir-rules { margin-bottom: 36px; }
+  .dir-rules h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 16px; }
+  .rule { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; font-size: 14px; line-height: 1.5; color: #c0c4d0; }
+  .rule-num { font-family: var(--mono); font-size: 11px; color: var(--accent); background: rgba(0,229,160,0.1); min-width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .topics-wrap { margin-bottom: 36px; }
+  .topics-wrap h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 14px; }
+  .topics { display: flex; flex-wrap: wrap; gap: 8px; }
+  .topic-tag { font-family: var(--mono); font-size: 12px; padding: 6px 14px; background: rgba(0,144,255,0.08); border: 1px solid rgba(0,144,255,0.2); color: var(--accent2); letter-spacing: 0.5px; }
+  .cand-form { margin-bottom: 32px; }
+  .cand-form h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .form-group input { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 14px; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
+  .form-group input:focus { border-color: var(--accent); }
+  .btn-start { background: var(--accent); color: #000; border: none; font-family: var(--sans); font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 16px 40px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+  .btn-start:hover { background: #00ffa8; transform: translateY(-1px); }
+
+  /* TEST */
+  .test-header { position: sticky; top: 0; z-index: 100; background: rgba(10,12,16,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 14px 0; margin-bottom: 32px; }
+  .test-header-inner { max-width: 860px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; }
+  .timer-wrap { display: flex; align-items: center; gap: 10px; }
+  .timer-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+  .timer { font-family: var(--mono); font-size: 28px; font-weight: 500; color: var(--accent); letter-spacing: 2px; transition: color 0.3s; }
+  .timer.warn { color: var(--warn); }
+  .timer.danger { color: var(--danger); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .progress-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .progress-text { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .progress-bar-outer { width: 160px; height: 3px; background: var(--border); }
+  .progress-bar-inner { height: 100%; background: var(--accent); transition: width 0.3s ease; }
+  .question-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; padding: 16px; background: var(--card); border: 1px solid var(--border); }
+  .nav-btn { width: 34px; height: 34px; font-family: var(--mono); font-size: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn.answered { background: rgba(0,229,160,0.15); border-color: var(--accent); color: var(--accent); }
+  .nav-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .nav-legend { display: flex; gap: 16px; margin-bottom: 20px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .nav-legend span { display: flex; align-items: center; gap: 6px; }
+  .leg-dot { width: 10px; height: 10px; }
+  .leg-dot.answered { background: rgba(0,229,160,0.4); border: 1px solid var(--accent); }
+  .leg-dot.current { background: var(--accent); }
+  .leg-dot.unattempted { background: var(--surface); border: 1px solid var(--border); }
+  .question-card { background: var(--card); border: 1px solid var(--border); padding: 32px; margin-bottom: 20px; display: none; }
+  .question-card.active { display: block; }
+  .q-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
+  .q-num { font-family: var(--mono); font-size: 11px; color: var(--accent); background: rgba(0,229,160,0.1); padding: 4px 10px; letter-spacing: 1px; }
+  .q-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
+  .q-text { font-size: 16px; font-weight: 600; line-height: 1.6; margin-bottom: 24px; color: var(--text); }
+  .q-code { font-family: var(--mono); font-size: 13px; background: #0d1117; border: 1px solid var(--border); border-left: 3px solid var(--accent2); padding: 16px 20px; margin-bottom: 24px; color: #c9d1d9; line-height: 1.7; white-space: pre; overflow-x: auto; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-label { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; font-size: 14px; line-height: 1.4; }
+  .option-label:hover { border-color: var(--accent2); background: rgba(0,144,255,0.05); }
+  .option-label input[type="radio"] { display: none; }
+  .option-label.selected { border-color: var(--accent); background: rgba(0,229,160,0.08); }
+  .option-key { font-family: var(--mono); font-size: 12px; color: var(--muted); min-width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); flex-shrink: 0; transition: all 0.15s; }
+  .option-label.selected .option-key { background: var(--accent); border-color: var(--accent); color: #000; }
+  .q-nav-btns { display: flex; gap: 10px; margin-top: 24px; justify-content: space-between; }
+  .btn-nav { font-family: var(--mono); font-size: 12px; letter-spacing: 1px; padding: 10px 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .btn-nav:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-nav.primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+  .btn-nav.primary:hover { background: #00ffa8; }
+  .submit-section { background: var(--card); border: 1px solid var(--border); padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; margin-top: 12px; gap: 20px; }
+  .submit-info { font-size: 13px; color: var(--muted); font-family: var(--mono); }
+  .btn-submit { background: var(--danger); color: #fff; border: none; font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 14px 32px; cursor: pointer; transition: all 0.2s; }
+  .btn-submit:hover { background: #ff5570; }
+
+  /* RESULT */
+  .result-wrap { background: var(--card); border: 1px solid var(--border); padding: 48px; text-align: center; position: relative; overflow: hidden; }
+  .result-glow { position: absolute; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(0,229,160,0.08) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; }
+  .result-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 16px; }
+  .score-big { font-family: var(--mono); font-size: 72px; font-weight: 500; color: var(--accent); line-height: 1; margin-bottom: 8px; }
+  .score-denom { font-family: var(--mono); font-size: 18px; color: var(--muted); margin-bottom: 28px; }
+  .result-grade { display: inline-block; font-size: 18px; font-weight: 800; padding: 10px 28px; border: 2px solid var(--accent); color: var(--accent); margin-bottom: 36px; letter-spacing: 2px; }
+  .result-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 36px; }
+  .stat-tile { background: var(--surface); border: 1px solid var(--border); padding: 16px 10px; }
+  .stat-val { font-family: var(--mono); font-size: 22px; display: block; margin-bottom: 4px; }
+  .stat-val.green { color: var(--success); }
+  .stat-val.red { color: var(--danger); }
+  .stat-val.blue { color: var(--accent2); }
+  .stat-val.warn { color: var(--warn); }
+  .stat-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .result-actions { display: flex; gap: 12px; justify-content: center; }
+  .btn-review { background: transparent; border: 1px solid var(--accent); color: var(--accent); font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 14px 32px; cursor: pointer; transition: all 0.2s; }
+  .btn-review:hover { background: rgba(0,229,160,0.1); }
+  .btn-retry { background: var(--accent2); border: 1px solid var(--accent2); color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 14px 32px; cursor: pointer; transition: all 0.2s; }
+  .btn-retry:hover { background: #2aa0ff; }
+  .timeup-banner { background: rgba(255,59,92,0.1); border: 1px solid var(--danger); color: var(--danger); font-family: var(--mono); font-size: 13px; padding: 12px 20px; text-align: center; letter-spacing: 2px; margin-bottom: 28px; display: none; }
+
+  /* REVIEW */
+  .review-q { background: var(--card); border: 1px solid var(--border); padding: 28px 32px; margin-bottom: 16px; }
+  .review-q-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .review-badge { font-family: var(--mono); font-size: 11px; padding: 4px 10px; letter-spacing: 1px; }
+  .review-badge.correct { background: rgba(0,229,160,0.1); border: 1px solid var(--success); color: var(--success); }
+  .review-badge.wrong { background: rgba(255,59,92,0.1); border: 1px solid var(--danger); color: var(--danger); }
+  .review-badge.skipped { background: rgba(90,96,112,0.2); border: 1px solid var(--muted); color: var(--muted); }
+  .review-q-text { font-size: 15px; font-weight: 600; margin-bottom: 16px; line-height: 1.5; }
+  .review-code { font-family: var(--mono); font-size: 12px; background: #0d1117; border: 1px solid var(--border); border-left: 3px solid var(--accent2); padding: 12px 16px; margin-bottom: 16px; color: #c9d1d9; line-height: 1.7; white-space: pre; overflow-x: auto; }
+  .review-options { display: flex; flex-direction: column; gap: 8px; }
+  .review-opt { display: flex; align-items: center; gap: 12px; padding: 10px 14px; font-size: 13px; border: 1px solid var(--border); background: var(--surface); }
+  .review-opt.correct-ans { border-color: var(--success); background: rgba(0,229,160,0.07); color: var(--success); }
+  .review-opt.user-wrong { border-color: var(--danger); background: rgba(255,59,92,0.07); color: var(--danger); }
+  .review-opt-key { font-family: var(--mono); font-size: 11px; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border: 1px solid currentColor; flex-shrink: 0; }
+  .review-explanation { margin-top: 14px; padding: 12px 16px; background: rgba(0,144,255,0.06); border-left: 2px solid var(--accent2); font-size: 13px; color: #a0b0c8; line-height: 1.6; font-family: var(--mono); }
+  .review-back { display: flex; justify-content: center; margin-top: 28px; margin-bottom: 40px; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(10,12,16,0.85); backdrop-filter: blur(4px); z-index: 500; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--card); border: 1px solid var(--border); padding: 36px; max-width: 400px; width: 90%; }
+  .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .modal p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; font-family: var(--mono); }
+  .modal-btns { display: flex; gap: 12px; }
+  .btn-cancel { flex: 1; padding: 12px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: var(--sans); font-size: 13px; font-weight: 600; cursor: pointer; letter-spacing: 1px; }
+  .btn-confirm { flex: 1; padding: 12px; background: var(--danger); border: none; color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 1px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 30px; right: 30px; background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 14px 20px; font-family: var(--mono); font-size: 13px; color: var(--text); opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 999; max-width: 280px; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 600px) {
+    .info-grid { grid-template-columns: 1fr 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .result-stats { grid-template-columns: 1fr 1fr; }
+    .directions-wrap { padding: 28px 20px; }
+    .submit-section { flex-direction: column; }
+    .result-actions { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- DIRECTIONS SCREEN -->
+<div id="screen-directions" class="screen active">
+  <div class="container">
+    <div class="header">
+      <div class="logo">analytica<span>.</span></div>
+      <div class="badge">Assessment Portal</div>
+    </div>
+    <div class="directions-wrap">
+      <div class="dir-title">Python Programming<br>Fundamentals Test</div>
+      <div class="dir-sub">// LEVEL 01 — LEVEL 02 &nbsp;|&nbsp; BEGINNER TO INTERMEDIATE</div>
+      <div class="info-grid">
+        <div class="info-tile"><span class="val">30</span><span class="lbl">Questions</span></div>
+        <div class="info-tile"><span class="val">30</span><span class="lbl">Minutes</span></div>
+        <div class="info-tile"><span class="val">1</span><span class="lbl">Mark Each</span></div>
+      </div>
+      <div class="dir-rules">
+        <h3>// Instructions</h3>
+        <div class="rule"><div class="rule-num">01</div><span>Each question carries <strong>1 mark</strong>. There is <strong>no negative marking</strong> for wrong answers.</span></div>
+        <div class="rule"><div class="rule-num">02</div><span>The timer starts immediately after you click <strong>Begin Assessment</strong>. Do not refresh the page.</span></div>
+        <div class="rule"><div class="rule-num">03</div><span>Navigate freely between questions using the question grid or Prev / Next buttons.</span></div>
+        <div class="rule"><div class="rule-num">04</div><span>The test will <strong>auto-submit</strong> when the 30-minute timer expires. All answered questions are saved.</span></div>
+        <div class="rule"><div class="rule-num">05</div><span>Once submitted, answers cannot be changed. Use <strong>Review Answers</strong> to see correct answers with explanations.</span></div>
+        <div class="rule"><div class="rule-num">06</div><span>Unanswered questions score <strong>0 marks</strong>. Attempt all before submitting.</span></div>
+        <div class="rule"><div class="rule-num">07</div><span>Grading: &ge;80% = Excellent Pass &nbsp;|&nbsp; 60–79% = Good Pass &nbsp;|&nbsp; &lt;60% = Needs Improvement.</span></div>
+      </div>
+      <div class="topics-wrap">
+        <h3>// Topics Covered</h3>
+        <div class="topics">
+          <span class="topic-tag">Variables &amp; Data Types</span>
+          <span class="topic-tag">Operators</span>
+          <span class="topic-tag">Strings</span>
+          <span class="topic-tag">Lists &amp; Tuples</span>
+          <span class="topic-tag">Dictionaries</span>
+          <span class="topic-tag">Conditionals</span>
+          <span class="topic-tag">Loops</span>
+          <span class="topic-tag">Functions</span>
+          <span class="topic-tag">Input / Output</span>
+          <span class="topic-tag">Type Conversion</span>
+          <span class="topic-tag">Basic File I/O</span>
+          <span class="topic-tag">Error Handling</span>
+        </div>
+      </div>
+      <div class="cand-form">
+        <h3>// Candidate Details</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="cand-name" placeholder="Enter your full name" />
+          </div>
+          <div class="form-group">
+            <label>Candidate ID</label>
+            <input type="text" id="cand-id" placeholder="e.g. ANL-2024-001" />
+          </div>
+        </div>
+      </div>
+      <button class="btn-start" onclick="startTest()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5,3 19,12 5,21"/></svg>
+        Begin Assessment
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TEST SCREEN -->
+<div id="screen-test" class="screen">
+  <div class="test-header">
+    <div class="test-header-inner">
+      <div class="logo" style="font-size:17px">analytica<span style="color:var(--accent)">.</span></div>
+      <div class="timer-wrap">
+        <span class="timer-label">TIME LEFT</span>
+        <div class="timer" id="timer">30:00</div>
+      </div>
+      <div class="progress-wrap">
+        <span class="progress-text" id="progress-text">0 / 30 answered</span>
+        <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="container" style="padding-top:0">
+    <div class="question-nav" id="q-nav"></div>
+    <div class="nav-legend">
+      <span><div class="leg-dot current"></div> Current</span>
+      <span><div class="leg-dot answered"></div> Answered</span>
+      <span><div class="leg-dot unattempted"></div> Unattempted</span>
+    </div>
+    <div id="questions-wrap"></div>
+    <div class="submit-section">
+      <span class="submit-info" id="submit-info">Answered: 0 / 30</span>
+      <button class="btn-submit" onclick="confirmSubmit()">Submit Test</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="screen-result" class="screen">
+  <div class="container">
+    <div class="header">
+      <div class="logo">analytica<span>.</span></div>
+      <div class="badge">Test Complete</div>
+    </div>
+    <div class="timeup-banner" id="timeup-banner">⏱ TIME EXPIRED — TEST AUTO-SUBMITTED</div>
+    <div class="result-wrap">
+      <div class="result-glow"></div>
+      <div class="result-label">Your Score</div>
+      <div class="score-big" id="res-score">0</div>
+      <div class="score-denom">out of 30 marks</div>
+      <div class="result-grade" id="res-grade">—</div>
+      <div class="result-stats">
+        <div class="stat-tile"><span class="stat-val green" id="res-correct">0</span><span class="stat-lbl">Correct</span></div>
+        <div class="stat-tile"><span class="stat-val red" id="res-wrong">0</span><span class="stat-lbl">Wrong</span></div>
+        <div class="stat-tile"><span class="stat-val warn" id="res-skipped">0</span><span class="stat-lbl">Skipped</span></div>
+        <div class="stat-tile"><span class="stat-val blue" id="res-pct">0%</span><span class="stat-lbl">Accuracy</span></div>
+      </div>
+      <div class="result-actions">
+        <button class="btn-review" onclick="showReview()">Review Answers</button>
+        <button class="btn-retry" onclick="location.reload()">Retake Test</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW SCREEN -->
+<div id="screen-review" class="screen">
+  <div class="container">
+    <div class="header">
+      <div class="logo">analytica<span>.</span></div>
+      <div class="badge">Answer Review</div>
+    </div>
+    <div id="review-wrap"></div>
+    <div class="review-back">
+      <button class="btn-review" onclick="showScreen('screen-result')">Back to Results</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>Submit Test?</h3>
+    <p id="modal-msg">Are you sure you want to submit?</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="submitTest(false)">Submit Now</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const QUESTIONS = [
+  { text: "What is the output of the following code?", code: "x = 10\ny = 3\nprint(x // y)", options: ["3.33", "3", "4", "33"], answer: 1, topic: "Operators", explanation: "// is floor division. 10 // 3 = 3 (decimal truncated, not rounded)." },
+  { text: "Which of the following is a valid Python variable name?", options: ["2variable", "_my_var", "my-var", "class"], answer: 1, topic: "Variables", explanation: "Variable names cannot start with a digit, contain hyphens, or be reserved keywords. _my_var is valid." },
+  { text: "What does len('Python') return?", options: ["5", "6", "7", "Error"], answer: 1, topic: "Strings", explanation: "'Python' has 6 characters: P-y-t-h-o-n. len() counts all of them." },
+  { text: "What is the output?", code: "print(type(3.14))", options: ["<class 'int'>", "<class 'float'>", "<class 'double'>", "<class 'decimal'>"], answer: 1, topic: "Data Types", explanation: "3.14 is a floating-point number. Python's type system calls it 'float'." },
+  { text: "What will be printed?", code: "lst = [1, 2, 3, 4, 5]\nprint(lst[1:3])", options: ["[1, 2]", "[2, 3]", "[2, 3, 4]", "[1, 2, 3]"], answer: 1, topic: "Lists", explanation: "Slicing lst[1:3] returns index 1 and 2 (stop index is exclusive). That gives [2, 3]." },
+  { text: "Which keyword is used to define a function in Python?", options: ["function", "define", "def", "func"], answer: 2, topic: "Functions", explanation: "Python uses 'def' to define functions. Example: def my_func(): ..." },
+  { text: "What is the output?", code: "x = 5\nif x > 3:\n    print('A')\nelif x > 1:\n    print('B')\nelse:\n    print('C')", options: ["A", "B", "C", "AB"], answer: 0, topic: "Conditionals", explanation: "x=5 satisfies x > 3 (first condition), so 'A' prints and elif/else are skipped." },
+  { text: "How do you convert integer 42 to a string in Python?", options: ["string(42)", "str(42)", "toString(42)", "convert(42, str)"], answer: 1, topic: "Type Conversion", explanation: "str() is the built-in function for converting to string. str(42) returns '42'." },
+  { text: "What will this loop print?", code: "for i in range(3):\n    print(i, end=' ')", options: ["1 2 3", "0 1 2", "0 1 2 3", "1 2 3 4"], answer: 1, topic: "Loops", explanation: "range(3) generates 0, 1, 2. end=' ' keeps output on one line: 0 1 2" },
+  { text: "What does the following return?", code: "d = {'a': 1, 'b': 2}\nprint(d.get('c', 0))", options: ["None", "Error", "0", "'c'"], answer: 2, topic: "Dictionaries", explanation: "dict.get(key, default) returns the default when key is missing. 'c' is absent, so 0 is returned." },
+  { text: "Which of these creates a tuple in Python?", options: ["t = [1, 2, 3]", "t = {1, 2, 3}", "t = (1, 2, 3)", "t = <1, 2, 3>"], answer: 2, topic: "Tuples", explanation: "Tuples use parentheses (). Lists use [], sets use {}." },
+  { text: "What is the output?", code: "s = 'hello'\nprint(s.upper())", options: ["Hello", "HELLO", "hello", "Error"], answer: 1, topic: "Strings", explanation: ".upper() converts all characters to uppercase. 'hello' becomes 'HELLO'." },
+  { text: "What value does this evaluate to?", code: "print(bool(0))", options: ["True", "False", "0", "None"], answer: 1, topic: "Data Types", explanation: "In Python, 0 is falsy. bool(0) = False. Any non-zero number is True." },
+  { text: "What is the result?", code: "print('Py' * 3)", options: ["'Py' * 3", "PyPyPy", "Py3", "Error"], answer: 1, topic: "Strings", explanation: "String repetition with * repeats it n times. 'Py' * 3 = 'PyPyPy'." },
+  { text: "What will be the output?", code: "x = [1, 2, 3]\nx.append(4)\nprint(len(x))", options: ["3", "4", "5", "Error"], answer: 1, topic: "Lists", explanation: "append() adds one element. List started with 3 elements; after append, length is 4." },
+  { text: "Which of the following is used to accept user input in Python 3?", options: ["raw_input()", "cin()", "input()", "scanf()"], answer: 2, topic: "Input / Output", explanation: "Python 3 uses input() to read user input as a string. raw_input() was Python 2 only." },
+  { text: "What does this function return?", code: "def greet(name='World'):\n    return 'Hello, ' + name\n\nprint(greet())", options: ["Hello, ", "Hello, World", "Error", "None"], answer: 1, topic: "Functions", explanation: "Called without arguments, default 'World' is used. Returns 'Hello, World'." },
+  { text: "Which operator checks if two values are equal in Python?", options: ["=", "==", "!=", "==="], answer: 1, topic: "Operators", explanation: "= is assignment. == is equality comparison. Python has no === (that's JavaScript)." },
+  { text: "What is the output?", code: "nums = [3, 1, 4, 1, 5]\nnums.sort()\nprint(nums[0])", options: ["3", "1", "5", "4"], answer: 1, topic: "Lists", explanation: "sort() sorts ascending. Sorted: [1, 1, 3, 4, 5]. First element (index 0) = 1." },
+  { text: "What will this print?", code: "count = 0\nwhile count < 3:\n    count += 1\nprint(count)", options: ["2", "3", "4", "0"], answer: 1, topic: "Loops", explanation: "Loop runs while count < 3, incrementing each iteration. When count reaches 3, loop ends. Prints 3." },
+  { text: "What is the result?", code: "x = 10\ny = 4\nprint(x % y)", options: ["2", "2.5", "0", "10"], answer: 0, topic: "Operators", explanation: "% is the modulo (remainder) operator. 10 = 4*2 + 2, so 10 % 4 = 2." },
+  { text: "Which statement correctly creates an empty dictionary?", options: ["d = []", "d = ()", "d = {}", "d = set()"], answer: 2, topic: "Dictionaries", explanation: "{} creates an empty dictionary. [] is a list, () is a tuple, set() creates an empty set." },
+  { text: "What will this print?", code: "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(len(a))", options: ["3", "4", "5", "Error"], answer: 1, topic: "Lists", explanation: "b = a creates a reference, NOT a copy. Both point to the same list. Appending to b also changes a. len = 4." },
+  { text: "What does this code print?", code: "print(10 != 10)", options: ["True", "False", "10", "Error"], answer: 1, topic: "Operators", explanation: "!= means 'not equal'. 10 is equal to 10, so 10 != 10 is False." },
+  { text: "Which of the following opens a file for reading in Python?", options: ["open('f.txt', 'w')", "open('f.txt', 'r')", "open('f.txt', 'a')", "open('f.txt', 'x')"], answer: 1, topic: "File I/O", explanation: "'r' mode opens for reading. 'w' writes/overwrites, 'a' appends, 'x' creates new file." },
+  { text: "What will this print?", code: "for char in 'Hi!':\n    print(char, end='')", options: ["H i !", "Hi!", "H\\ni\\n!", "Error"], answer: 1, topic: "Loops", explanation: "Iterating a string yields characters one by one. end='' prevents newlines. Output: Hi!" },
+  { text: "What is the correct syntax for exception handling in Python?", options: ["try... catch", "try... except", "attempt... handle", "check... rescue"], answer: 1, topic: "Error Handling", explanation: "Python uses try...except. 'catch' is Java/JavaScript syntax, not Python." },
+  { text: "What is the output?", code: "def square(n):\n    return n ** 2\n\nprint(square(4))", options: ["8", "16", "42", "Error"], answer: 1, topic: "Functions", explanation: "** is the exponentiation operator. 4 ** 2 = 16." },
+  { text: "Which method removes and returns the last element of a list?", options: [".remove()", ".delete()", ".pop()", ".discard()"], answer: 2, topic: "Lists", explanation: ".pop() removes and returns the last element by default. .remove() deletes by value." },
+  { text: "What will this evaluate to?", code: "x = True\ny = False\nprint(x and y)", options: ["True", "False", "1", "None"], answer: 1, topic: "Operators", explanation: "'and' returns True only if both operands are True. True and False = False." }
+];
+
+let userAnswers = new Array(30).fill(-1);
+let currentQ = 0;
+let timerInterval = null;
+let secondsLeft = 1800;
+let submitted = false;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function startTest() {
+  const name = document.getElementById('cand-name').value.trim();
+  if (!name) { showToast('Please enter your name to begin.'); return; }
+  buildQuestions();
+  buildNav();
+  showScreen('screen-test');
+  startTimer();
+  goToQuestion(0);
+}
+
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildQuestions() {
+  const wrap = document.getElementById('questions-wrap');
+  wrap.innerHTML = '';
+  const keys = ['A','B','C','D'];
+  QUESTIONS.forEach((q, i) => {
+    const codeHtml = q.code ? `<div class="q-code">${escH(q.code)}</div>` : '';
+    const optsHtml = q.options.map((opt, oi) =>
+      `<label class="option-label" id="opt-${i}-${oi}" onclick="selectAnswer(${i},${oi})">
+        <input type="radio" name="q${i}" value="${oi}">
+        <span class="option-key">${keys[oi]}</span>
+        <span>${escH(opt)}</span>
+      </label>`
+    ).join('');
+    const isLast = i === 29;
+    wrap.innerHTML += `
+      <div class="question-card" id="qcard-${i}">
+        <div class="q-header">
+          <span class="q-num">Q${String(i+1).padStart(2,'0')}</span>
+          <span style="font-size:12px;color:var(--muted);font-family:var(--mono)">${q.topic}</span>
+          <span class="q-meta">1 mark</span>
+        </div>
+        <div class="q-text">${escH(q.text)}</div>
+        ${codeHtml}
+        <div class="options" id="opts-${i}">${optsHtml}</div>
+        <div class="q-nav-btns">
+          <button class="btn-nav" onclick="goToQuestion(${i-1})" ${i===0?'disabled':''}>&#8592; Prev</button>
+          <button class="btn-nav" onclick="clearAnswer(${i})">Clear</button>
+          <button class="btn-nav${isLast?' primary':''}" onclick="${isLast?'confirmSubmit()':'goToQuestion('+(i+1)+')'}">
+            ${isLast ? 'Finish &#8594;' : 'Next &#8594;'}
+          </button>
+        </div>
+      </div>`;
+  });
+}
+
+function buildNav() {
+  const nav = document.getElementById('q-nav');
+  nav.innerHTML = '';
+  for (let i = 0; i < 30; i++) {
+    nav.innerHTML += `<button class="nav-btn" id="nav-${i}" onclick="goToQuestion(${i})">${i+1}</button>`;
+  }
+}
+
+function goToQuestion(n) {
+  if (n < 0 || n >= 30) return;
+  document.querySelectorAll('.question-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('qcard-'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach((b, i) => {
+    b.classList.remove('active');
+    b.classList.toggle('answered', userAnswers[i] !== -1);
+  });
+  document.getElementById('nav-'+n).classList.add('active');
+  currentQ = n;
+}
+
+function selectAnswer(qi, oi) {
+  if (submitted) return;
+  userAnswers[qi] = oi;
+  document.querySelectorAll('#opts-'+qi+' .option-label').forEach((el, i) => el.classList.toggle('selected', i === oi));
+  document.getElementById('nav-'+qi).classList.add('answered');
+  updateProgress();
+}
+
+function clearAnswer(qi) {
+  userAnswers[qi] = -1;
+  document.querySelectorAll('#opts-'+qi+' .option-label').forEach(el => el.classList.remove('selected'));
+  document.getElementById('nav-'+qi).classList.remove('answered');
+  updateProgress();
+}
+
+function updateProgress() {
+  const answered = userAnswers.filter(a => a !== -1).length;
+  document.getElementById('progress-text').textContent = answered+' / 30 answered';
+  document.getElementById('progress-bar').style.width = ((answered/30)*100)+'%';
+  document.getElementById('submit-info').textContent = 'Answered: '+answered+' / 30';
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    const m = Math.floor(secondsLeft / 60);
+    const s = secondsLeft % 60;
+    const el = document.getElementById('timer');
+    el.textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    el.classList.remove('warn','danger');
+    if (secondsLeft <= 120) el.classList.add('danger');
+    else if (secondsLeft <= 600) el.classList.add('warn');
+    if (secondsLeft <= 0) { clearInterval(timerInterval); submitTest(true); }
+  }, 1000);
+}
+
+function confirmSubmit() {
+  const un = userAnswers.filter(a => a === -1).length;
+  document.getElementById('modal-msg').textContent = un > 0
+    ? 'You have '+un+' unanswered question(s). They will score 0. Submit now?'
+    : 'All 30 questions answered. Submit now?';
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+function submitTest(auto) {
+  if (submitted) return;
+  submitted = true;
+  closeModal();
+  clearInterval(timerInterval);
+  let correct=0, wrong=0, skipped=0;
+  QUESTIONS.forEach((q, i) => {
+    if (userAnswers[i] === -1) skipped++;
+    else if (userAnswers[i] === q.answer) correct++;
+    else wrong++;
+  });
+  const pct = Math.round((correct/30)*100);
+  let grade = pct >= 80 ? 'EXCELLENT — PASS' : pct >= 60 ? 'GOOD — PASS' : pct >= 40 ? 'AVERAGE — NEEDS IMPROVEMENT' : 'FAIL — RETAKE RECOMMENDED';
+  document.getElementById('res-score').textContent = correct;
+  document.getElementById('res-grade').textContent = grade;
+  document.getElementById('res-correct').textContent = correct;
+  document.getElementById('res-wrong').textContent = wrong;
+  document.getElementById('res-skipped').textContent = skipped;
+  document.getElementById('res-pct').textContent = pct+'%';
+  if (auto) document.getElementById('timeup-banner').style.display = 'block';
+  showScreen('screen-result');
+}
+
+function showReview() {
+  const wrap = document.getElementById('review-wrap');
+  wrap.innerHTML = '';
+  const keys = ['A','B','C','D'];
+  QUESTIONS.forEach((q, i) => {
+    const ua = userAnswers[i], ca = q.answer;
+    const sc = ua === -1 ? 'skipped' : ua === ca ? 'correct' : 'wrong';
+    const sl = ua === -1 ? 'SKIPPED' : ua === ca ? 'CORRECT' : 'WRONG';
+    const codeHtml = q.code ? `<div class="review-code">${escH(q.code)}</div>` : '';
+    const optsHtml = q.options.map((opt, oi) => {
+      let cls = oi === ca ? 'correct-ans' : (oi === ua && ua !== ca) ? 'user-wrong' : '';
+      const icon = oi === ca ? ' &#10003;' : (oi === ua && ua !== ca) ? ' &#10007;' : '';
+      return `<div class="review-opt ${cls}"><span class="review-opt-key">${keys[oi]}</span><span>${escH(opt)}${icon}</span></div>`;
+    }).join('');
+    wrap.innerHTML += `
+      <div class="review-q">
+        <div class="review-q-header">
+          <span style="font-family:var(--mono);font-size:13px;color:var(--muted)">Q${i+1}</span>
+          <span class="review-badge ${sc}">${sl}</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto">${q.topic}</span>
+        </div>
+        <div class="review-q-text">${escH(q.text)}</div>
+        ${codeHtml}
+        <div class="review-options">${optsHtml}</div>
+        <div class="review-explanation">💡 ${q.explanation}</div>
+      </div>`;
+  });
+  showScreen('screen-review');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
